@@ -36,7 +36,6 @@ export default function LoginFormLayout() {
             }
         }).then((res: any) => {
             toast.success('logged in success!')
-            console.log("desgraça", res.data)
             setToken(res.data.token)
             setExpiredToken(res.data.expired_token)
         }).catch((err) => {
