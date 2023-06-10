@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 interface AuthContextInterface {
   isAuthenticated: boolean;
@@ -13,7 +13,7 @@ interface AuthContextInterface {
 export const AuthContext = React.createContext<AuthContextInterface>({
   isAuthenticated: false,
   setToken: () => {},
-  token: '',
+  token: "",
   setExpiredToken: () => {},
   expiredToken: 0,
   logout: () => {},
@@ -25,25 +25,26 @@ interface Props {
 
 export default function AuthProvider({ children }: Props) {
   const [isAuthenticated, SetIsAuthenticated] = React.useState(false);
-  const [token, setToken] = useState(localStorage.getItem('myApp-JWT'));
+  const [token, setToken] = useState(localStorage.getItem("myApp-JWT"));
   const [expiredToken, setExpiredToken] = useState<number | null>(
-    localStorage.getItem('expired-token')
-      ? parseInt(localStorage.getItem('expired-token')!, 10)
+    localStorage.getItem("expired-token")
+      ? parseInt(localStorage.getItem("expired-token")!, 10)
       : null
   );
+  const [isLogoutByTimeout, setIsLogoutByTimeout] = React.useState(false);
 
   function logout() {
-    setToken('');
-    setExpiredToken(0);
+    setToken("");
+    setExpiredToken(null);
     SetIsAuthenticated(false);
-    localStorage.removeItem('myApp-JWT');
-    localStorage.removeItem('expired-token');
+    localStorage.removeItem("myApp-JWT");
+    localStorage.removeItem("expired-token");
   }
 
   React.useEffect(() => {
     if (token) {
       SetIsAuthenticated(true);
-      localStorage.setItem('myApp-JWT', token);
+      localStorage.setItem("myApp-JWT", token);
     } else {
       logout();
     }
@@ -51,13 +52,21 @@ export default function AuthProvider({ children }: Props) {
 
   useEffect(() => {
     if (expiredToken) {
-      const timeout = setTimeout(logout, expiredToken);
+      const timeout = setTimeout(() => {
+        setIsLogoutByTimeout(true);
+        logout();
+      }, expiredToken);
       return () => {
-        toast.info('Desloga por tempo!');
         clearTimeout(timeout);
       };
     }
   }, [expiredToken]);
+
+  useEffect(() => {
+    if (isLogoutByTimeout) {
+      toast.info("Deslogado por tempo!");
+    }
+  }, [isLogoutByTimeout]);
 
   return (
     <AuthContext.Provider
